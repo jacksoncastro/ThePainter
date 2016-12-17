@@ -1,25 +1,31 @@
 package br.com.jackson.thepainter;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
+import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-
+import android.util.Log;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-
-import android.view.View.OnClickListener;
 import android.widget.Toast;
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
@@ -106,9 +112,63 @@ public class MainActivity extends AppCompatActivity {
         return new OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                if (ContextCompat.checkSelfPermission(MainActivity.this,
+                        Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(MainActivity.this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE}, Constants.READ_EXTERNAL_STORAGE);
+                } else {
+                    loadImageFromGallery();
+                }
             }
         };
+    }
+
+    private void loadImageFromGallery() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"), Constants.PICK_IMAGE);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        try {
+            if (data == null) {
+                Toast.makeText(MainActivity.this, "Erro to load image", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (requestCode == Constants.PICK_IMAGE && resultCode == Activity.RESULT_OK) {
+                loadInputStream(data);
+            }
+
+        } catch (IOException e) {
+            Log.e(MainActivity.class.getSimpleName(), "Erro to load image from gallery", e);
+        }
+    }
+
+    private void loadInputStream(Intent data) throws IOException {
+        InputStream inputStream = MainActivity.this.getContentResolver().openInputStream(data.getData());
+        BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+        try {
+            setBackgroundImage(bufferedInputStream);
+        } finally {
+            if (bufferedInputStream != null) {
+                bufferedInputStream.close();
+            }
+            if (inputStream != null) {
+                inputStream.close();
+            }
+        }
+    }
+
+    private void setBackgroundImage(BufferedInputStream bufferedInputStream) {
+
+        Bitmap bitmap = BitmapFactory.decodeStream(bufferedInputStream);
+
+        if (bitmap != null) {
+            BitmapDrawable ob = new BitmapDrawable(getResources(), bitmap);
+            painterView.setBackgroundDrawable(ob);
+        }
     }
 
     private OnClickListener getListenerNew() {
@@ -266,7 +326,15 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(MainActivity.this, "You don't granted permission of write storage for application", Toast.LENGTH_SHORT).show();
                 }
-                return;
+                break;
+            }
+            case Constants.READ_EXTERNAL_STORAGE: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    loadImageFromGallery();
+                } else {
+                    Toast.makeText(MainActivity.this, "You don't granted permission of read storage for application", Toast.LENGTH_SHORT).show();
+                }
+                break;
             }
         }
     }
