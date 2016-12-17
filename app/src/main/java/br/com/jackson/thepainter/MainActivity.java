@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -21,7 +22,7 @@ import android.widget.Toast;
 
 import java.util.UUID;
 
-public class MainActivity extends AppCompatActivity implements OnClickListener {
+public class MainActivity extends AppCompatActivity {
 
     private PainterView painterView;
 
@@ -30,6 +31,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
     private ImageButton eraseBtn;
     private ImageButton newBtn;
     private ImageButton saveBtn;
+    private ImageButton loadImageBtn;
 
     private float smallBrush;
     private float mediumBrush;
@@ -40,6 +42,10 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        initializingDrawer();
+    }
+
+    private void initializingDrawer() {
         painterView = (PainterView)findViewById(R.id.painter);
 
         LinearLayout paintLayout = (LinearLayout)findViewById(R.id.paint_colors);
@@ -55,19 +61,170 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         largeBrush = getResources().getInteger(R.integer.large_size);
 
         drawBtn = (ImageButton)findViewById(R.id.draw_btn);
-
-        drawBtn.setOnClickListener(this);
+        drawBtn.setOnClickListener(getListenerDrawer());
 
         painterView.setBrushSize(mediumBrush);
 
         eraseBtn = (ImageButton)findViewById(R.id.erase_btn);
-        eraseBtn.setOnClickListener(this);
+        eraseBtn.setOnClickListener(getListenerErase());
 
         newBtn = (ImageButton)findViewById(R.id.new_btn);
-        newBtn.setOnClickListener(this);
+        newBtn.setOnClickListener(getListenerNew());
 
         saveBtn = (ImageButton)findViewById(R.id.save_btn);
-        saveBtn.setOnClickListener(this);
+        saveBtn.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                AlertDialog.Builder saveDialog = new AlertDialog.Builder(MainActivity.this);
+                saveDialog.setTitle("Save drawing");
+                saveDialog.setMessage("Save drawing to device Gallery?");
+                saveDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener(){
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (ContextCompat.checkSelfPermission(MainActivity.this,
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                                != PackageManager.PERMISSION_GRANTED) {
+                            ActivityCompat.requestPermissions(MainActivity.this, new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE}, Constants.WRITE_EXTERNAL_STORAGE);
+                        } else {
+                            saveImage();
+                        }
+                    }
+                });
+                saveDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener(){
+                    public void onClick(DialogInterface dialog, int which){
+                        dialog.cancel();
+                    }
+                });
+                saveDialog.show();
+            }
+        });
+
+        loadImageBtn = (ImageButton)findViewById(R.id.load_image_btn);
+        loadImageBtn.setOnClickListener(getListenerLoadImage());
+    }
+
+    private OnClickListener getListenerLoadImage() {
+        return new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        };
+    }
+
+    private OnClickListener getListenerNew() {
+        return new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                AlertDialog.Builder newDialog = new AlertDialog.Builder(MainActivity.this);
+                newDialog.setTitle("New drawing");
+                newDialog.setMessage("Start new drawing (you will lose the current drawing)?");
+                newDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        painterView.startNew();
+                        dialog.dismiss();
+                    }
+                });
+                newDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+                newDialog.show();
+            }
+        };
+    }
+
+    private OnClickListener getListenerErase() {
+        return new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                final Dialog brushDialog = new Dialog(MainActivity.this);
+                brushDialog.setTitle("Eraser size:");
+                brushDialog.setContentView(R.layout.brush_chooser);
+
+                ImageButton smallBtn = (ImageButton)brushDialog.findViewById(R.id.small_brush);
+                smallBtn.setOnClickListener(new OnClickListener(){
+                    @Override
+                    public void onClick(View v) {
+                        painterView.setErase(true);
+                        painterView.setColor(Color.WHITE);
+                        painterView.setBrushSize(smallBrush);
+                        brushDialog.dismiss();
+                        painterView.setErase(false);
+                    }
+                });
+
+                ImageButton mediumBtn = (ImageButton)brushDialog.findViewById(R.id.medium_brush);
+                mediumBtn.setOnClickListener(new OnClickListener(){
+                    @Override
+                    public void onClick(View v) {
+                        painterView.setErase(true);
+                        painterView.setColor(Color.WHITE);
+                        painterView.setBrushSize(mediumBrush);
+                        brushDialog.dismiss();
+                        painterView.setErase(false);
+                    }
+                });
+
+                ImageButton largeBtn = (ImageButton)brushDialog.findViewById(R.id.large_brush);
+                largeBtn.setOnClickListener(new OnClickListener(){
+                    @Override
+                    public void onClick(View v) {
+                        painterView.setErase(true);
+                        painterView.setColor(Color.WHITE);
+                        painterView.setBrushSize(largeBrush);
+                        brushDialog.dismiss();
+                        painterView.setErase(false);
+                    }
+                });
+
+                brushDialog.show();
+            }
+        };
+    }
+
+    private OnClickListener getListenerDrawer() {
+        return new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                final Dialog brushDialog = new Dialog(MainActivity.this);
+                brushDialog.setTitle("Brush size:");
+
+                brushDialog.setContentView(R.layout.brush_chooser);
+
+                ImageButton smallBtn = (ImageButton) brushDialog.findViewById(R.id.small_brush);
+                smallBtn.setOnClickListener(new OnClickListener(){
+                    @Override
+                    public void onClick(View v) {
+                        painterView.setBrushSize(smallBrush);
+                        painterView.setLastBrushSize(smallBrush);
+                        brushDialog.dismiss();
+                    }
+                });
+
+                ImageButton mediumBtn = (ImageButton)brushDialog.findViewById(R.id.medium_brush);
+                mediumBtn.setOnClickListener(new OnClickListener(){
+                    @Override
+                    public void onClick(View view) {
+                        painterView.setBrushSize(mediumBrush);
+                        painterView.setLastBrushSize(mediumBrush);
+                        brushDialog.dismiss();
+                    }
+                });
+
+                ImageButton largeBtn = (ImageButton)brushDialog.findViewById(R.id.large_brush);
+                largeBtn.setOnClickListener(new OnClickListener(){
+                    @Override
+                    public void onClick(View view) {
+                        painterView.setBrushSize(largeBrush);
+                        painterView.setLastBrushSize(largeBrush);
+                        brushDialog.dismiss();
+                    }
+                });
+
+                brushDialog.show();
+            }
+        };
     }
 
     public void paintClicked(View view) {
@@ -81,127 +238,6 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
             currPaint=(ImageButton)view;
 
             painterView.setBrushSize(painterView.getLastBrushSize());
-        }
-    }
-
-    @Override
-    public void onClick(View view) {
-        if (view.getId() == R.id.draw_btn) {
-            final Dialog brushDialog = new Dialog(this);
-            brushDialog.setTitle("Brush size:");
-
-            brushDialog.setContentView(R.layout.brush_chooser);
-
-            ImageButton smallBtn = (ImageButton) brushDialog.findViewById(R.id.small_brush);
-            smallBtn.setOnClickListener(new OnClickListener(){
-                @Override
-                public void onClick(View v) {
-                    painterView.setBrushSize(smallBrush);
-                    painterView.setLastBrushSize(smallBrush);
-                    brushDialog.dismiss();
-                }
-            });
-
-            ImageButton mediumBtn = (ImageButton)brushDialog.findViewById(R.id.medium_brush);
-            mediumBtn.setOnClickListener(new OnClickListener(){
-                @Override
-                public void onClick(View view) {
-                    painterView.setBrushSize(mediumBrush);
-                    painterView.setLastBrushSize(mediumBrush);
-                    brushDialog.dismiss();
-                }
-            });
-
-            ImageButton largeBtn = (ImageButton)brushDialog.findViewById(R.id.large_brush);
-            largeBtn.setOnClickListener(new OnClickListener(){
-                @Override
-                public void onClick(View view) {
-                    painterView.setBrushSize(largeBrush);
-                    painterView.setLastBrushSize(largeBrush);
-                    brushDialog.dismiss();
-                }
-            });
-
-            brushDialog.show();
-        } else if(view.getId() == R.id.erase_btn) {
-            final Dialog brushDialog = new Dialog(this);
-            brushDialog.setTitle("Eraser size:");
-            brushDialog.setContentView(R.layout.brush_chooser);
-
-            ImageButton smallBtn = (ImageButton)brushDialog.findViewById(R.id.small_brush);
-            smallBtn.setOnClickListener(new OnClickListener(){
-                @Override
-                public void onClick(View v) {
-                    painterView.setErase(true);
-                    painterView.setColor(Color.WHITE);
-                    painterView.setBrushSize(smallBrush);
-                    brushDialog.dismiss();
-                    painterView.setErase(false);
-                }
-            });
-
-            ImageButton mediumBtn = (ImageButton)brushDialog.findViewById(R.id.medium_brush);
-            mediumBtn.setOnClickListener(new OnClickListener(){
-                @Override
-                public void onClick(View v) {
-                    painterView.setErase(true);
-                    painterView.setColor(Color.WHITE);
-                    painterView.setBrushSize(mediumBrush);
-                    brushDialog.dismiss();
-                    painterView.setErase(false);
-                }
-            });
-
-            ImageButton largeBtn = (ImageButton)brushDialog.findViewById(R.id.large_brush);
-            largeBtn.setOnClickListener(new OnClickListener(){
-                @Override
-                public void onClick(View v) {
-                    painterView.setErase(true);
-                    painterView.setColor(Color.WHITE);
-                    painterView.setBrushSize(largeBrush);
-                    brushDialog.dismiss();
-                    painterView.setErase(false);
-                }
-            });
-
-            brushDialog.show();
-        } else if(view.getId() == R.id.new_btn) {
-            AlertDialog.Builder newDialog = new AlertDialog.Builder(this);
-            newDialog.setTitle("New drawing");
-            newDialog.setMessage("Start new drawing (you will lose the current drawing)?");
-            newDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int which) {
-                    painterView.startNew();
-                    dialog.dismiss();
-                }
-            });
-            newDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.cancel();
-                }
-            });
-            newDialog.show();
-        } else if(view.getId() == R.id.save_btn) {
-            AlertDialog.Builder saveDialog = new AlertDialog.Builder(this);
-            saveDialog.setTitle("Save drawing");
-            saveDialog.setMessage("Save drawing to device Gallery?");
-            saveDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener(){
-                public void onClick(DialogInterface dialog, int which) {
-                    if (ContextCompat.checkSelfPermission(MainActivity.this,
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                            != PackageManager.PERMISSION_GRANTED) {
-                        ActivityCompat.requestPermissions(MainActivity.this, new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE}, Constants.WRITE_EXTERNAL_STORAGE);
-                    } else {
-                        saveImage();
-                    }
-                }
-            });
-            saveDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener(){
-                public void onClick(DialogInterface dialog, int which){
-                    dialog.cancel();
-                }
-            });
-            saveDialog.show();
         }
     }
 

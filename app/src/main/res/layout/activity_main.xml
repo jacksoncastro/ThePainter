@@ -36,6 +36,12 @@
             android:layout_height="fill_parent"
             android:contentDescription="@string/save"
             android:src="@drawable/save" />
+        <ImageButton
+            android:id="@+id/load_image_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:contentDescription="@string/load_image"
+            android:src="@drawable/load_image" />
     </LinearLayout>
 
     <br.com.jackson.thepainter.PainterView
