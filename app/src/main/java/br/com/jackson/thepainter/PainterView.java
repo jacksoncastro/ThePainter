@@ -42,12 +42,6 @@ public class PainterView extends View {
         initializingPainter();
     }
 
-    public PainterView(Context context) {
-        super(context);
-        // initializing view
-        initializingPainter();
-    }
-
     private void initializingPainter() {
         drawPath = new Path();
         drawPaint = new Paint(paintColor);
@@ -103,9 +97,9 @@ public class PainterView extends View {
         return true;
     }
 
-    public void setColor(String newColor) {
+    public void setColor(int newColor) {
         invalidate();
-        paintColor = Color.parseColor(newColor);
+        paintColor = newColor;
         drawPaint.setColor(paintColor);
     }
 
@@ -131,5 +125,10 @@ public class PainterView extends View {
         } else {
             drawPaint.setXfermode(null);
         }
+    }
+
+    public void startNew() {
+        drawCanvas.drawColor(0, PorterDuff.Mode.CLEAR);
+        invalidate();
     }
 }
