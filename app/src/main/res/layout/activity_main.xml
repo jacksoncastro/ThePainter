@@ -25,6 +25,12 @@
             android:contentDescription="@string/brush"
             android:src="@drawable/brush" />
         <ImageButton
+            android:id="@+id/spray_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:contentDescription="@string/spray"
+            android:src="@drawable/spray" />
+        <ImageButton
             android:id="@+id/erase_btn"
             android:layout_width="wrap_content"
             android:layout_height="fill_parent"

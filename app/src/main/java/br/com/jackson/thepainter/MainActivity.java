@@ -9,9 +9,11 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -34,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ImageButton currPaint;
     private ImageButton drawBtn;
+    private ImageButton sprayBtn;
     private ImageButton eraseBtn;
     private ImageButton newBtn;
     private ImageButton saveBtn;
@@ -68,6 +71,9 @@ public class MainActivity extends AppCompatActivity {
 
         drawBtn = (ImageButton)findViewById(R.id.draw_btn);
         drawBtn.setOnClickListener(getListenerDrawer());
+
+        sprayBtn = (ImageButton)findViewById(R.id.spray_btn);
+        sprayBtn.setOnClickListener(getListenerSpray());
 
         painterView.setBrushSize(mediumBrush);
 
@@ -106,6 +112,16 @@ public class MainActivity extends AppCompatActivity {
 
         loadImageBtn = (ImageButton)findViewById(R.id.load_image_btn);
         loadImageBtn.setOnClickListener(getListenerLoadImage());
+    }
+
+    @NonNull
+    private OnClickListener getListenerSpray() {
+        return new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                painterView.setCurrentTool(ToolType.SPRAY);
+            }
+        };
     }
 
     private OnClickListener getListenerLoadImage() {
@@ -211,6 +227,7 @@ public class MainActivity extends AppCompatActivity {
                         painterView.setBrushSize(smallBrush);
                         brushDialog.dismiss();
                         painterView.setErase(false);
+                        painterView.setCurrentTool(ToolType.BRUSH);
                     }
                 });
 
@@ -223,6 +240,7 @@ public class MainActivity extends AppCompatActivity {
                         painterView.setBrushSize(mediumBrush);
                         brushDialog.dismiss();
                         painterView.setErase(false);
+                        painterView.setCurrentTool(ToolType.BRUSH);
                     }
                 });
 
@@ -235,6 +253,7 @@ public class MainActivity extends AppCompatActivity {
                         painterView.setBrushSize(largeBrush);
                         brushDialog.dismiss();
                         painterView.setErase(false);
+                        painterView.setCurrentTool(ToolType.BRUSH);
                     }
                 });
 
@@ -255,7 +274,8 @@ public class MainActivity extends AppCompatActivity {
                 ImageButton smallBtn = (ImageButton) brushDialog.findViewById(R.id.small_brush);
                 smallBtn.setOnClickListener(new OnClickListener(){
                     @Override
-                    public void onClick(View v) {
+                    public void onClick(View view) {
+                        painterView.setCurrentTool(ToolType.BRUSH);
                         painterView.setBrushSize(smallBrush);
                         painterView.setLastBrushSize(smallBrush);
                         brushDialog.dismiss();
@@ -266,6 +286,7 @@ public class MainActivity extends AppCompatActivity {
                 mediumBtn.setOnClickListener(new OnClickListener(){
                     @Override
                     public void onClick(View view) {
+                        painterView.setCurrentTool(ToolType.BRUSH);
                         painterView.setBrushSize(mediumBrush);
                         painterView.setLastBrushSize(mediumBrush);
                         brushDialog.dismiss();
@@ -276,6 +297,7 @@ public class MainActivity extends AppCompatActivity {
                 largeBtn.setOnClickListener(new OnClickListener(){
                     @Override
                     public void onClick(View view) {
+                        painterView.setCurrentTool(ToolType.BRUSH);
                         painterView.setBrushSize(largeBrush);
                         painterView.setLastBrushSize(largeBrush);
                         brushDialog.dismiss();

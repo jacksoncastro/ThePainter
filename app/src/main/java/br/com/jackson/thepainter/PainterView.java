@@ -3,7 +3,6 @@ package br.com.jackson.thepainter;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PorterDuff;
@@ -12,6 +11,8 @@ import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
+
+import java.util.Random;
 
 /**
  * Created by jackson on 17/12/16.
@@ -35,6 +36,8 @@ public class PainterView extends View {
     private float lastBrushSize;
 
     private boolean erase;
+
+    private ToolType currentTool = ToolType.BRUSH;
 
     public PainterView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -81,10 +84,20 @@ public class PainterView extends View {
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                drawPath.moveTo(touchX, touchY);
+                if (currentTool == ToolType.SPRAY) {
+                    sprayMoveTo(touchX, touchY);
+                } else {
+                    drawPaint.setStyle(Paint.Style.STROKE);
+                    drawPath.moveTo(touchX, touchY);
+                }
                 break;
             case MotionEvent.ACTION_MOVE:
-                drawPath.lineTo(touchX, touchY);
+                if (currentTool == ToolType.SPRAY) {
+                    sprayLineTo(touchX, touchY);
+                } else {
+                    drawPaint.setStyle(Paint.Style.STROKE);
+                    drawPath.lineTo(touchX, touchY);
+                }
                 break;
             case MotionEvent.ACTION_UP:
                 drawCanvas.drawPath(drawPath, drawPaint);
@@ -95,6 +108,39 @@ public class PainterView extends View {
         }
         invalidate();
         return true;
+    }
+
+    private void sprayLineTo(float touchX, float touchY) {
+        int dotsToDrawAtATime = 10;
+        double brushRadius = 10.0;
+
+        drawPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+        for (int i = 0; i < dotsToDrawAtATime; i++) {
+            // Get the location to draw to
+            Random random = new Random();
+
+            float x = (float) (touchX + random.nextGaussian() * brushRadius);
+            float y = (float) (touchY + random.nextGaussian() * brushRadius);
+
+            drawCanvas.drawPoint(x, y, drawPaint);
+        }
+    }
+
+    private void sprayMoveTo(float touchX, float touchY) {
+
+        int dotsToDrawAtATime = 10;
+        double brushRadius = 50.0;
+
+        drawPaint.setStrokeWidth(10f);
+        for (int i = 0; i < dotsToDrawAtATime; i++) {
+            // Get the location to draw to
+            Random random = new Random();
+
+            float x = (float) (touchX + random.nextGaussian() * brushRadius);
+            float y = (float) (touchY + random.nextGaussian() * brushRadius);
+
+            drawPath.moveTo(x, y);
+        }
     }
 
     public void setColor(int newColor) {
@@ -130,5 +176,13 @@ public class PainterView extends View {
     public void startNew() {
         drawCanvas.drawColor(0, PorterDuff.Mode.CLEAR);
         invalidate();
+    }
+
+    public ToolType getCurrentTool() {
+        return currentTool;
+    }
+
+    public void setCurrentTool(ToolType currentTool) {
+        this.currentTool = currentTool;
     }
 }

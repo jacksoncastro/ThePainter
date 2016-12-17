@@ -10,4 +10,5 @@
     <string name="med">Medium</string>
     <string name="lrg">Large</string>
     <string name="load_image">Load Image</string>
+    <string name="spray">Spray</string>
 </resources>
